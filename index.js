@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const app = express()
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -38,6 +38,13 @@ async function run() {
         service.slots = available;
       })
       res.send(services);
+    })
+
+    app.get('/booking', async(req , res) =>{
+      const patient = req.query.patient;
+      const query = { patient: patient};
+      const bookings = await bookingCollection.find(query).toArray();
+      res.send(bookings);
     })
 
     app.post('/booking', async(req , res) =>{
