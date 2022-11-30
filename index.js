@@ -16,13 +16,40 @@ async function run() {
   try{
     await client.connect();
     const serviceCollection = client.db('doctors_portal').collection('services');
+    const bookingCollection = client.db('doctors_portal').collection('bookings');
 
     app.get('/service', async(req , res) =>{
       const query = {};
       const cursor = serviceCollection.find(query);
       const services = await cursor.toArray();
       res.send(services);
+    });
+    
+    app.get('/available', async(req , res) =>{
+      const date = req.query.date || 'May 11, 2011';
+      const services = await serviceCollection.find().toArray();
+      const query = {date: date};
+      const booked = await bookingCollection.find(query).toArray();
+
+      services.forEach(service => {
+        const serviceBookings = booked.filter(b => b.treatment === service.name);
+        const updateBooke = serviceBookings.map(s => s.slot);
+        const available = service.slots.filter(s => !updateBooke.includes(s));
+        service.available = available;
+      })
+      res.send(booked);
     })
+
+    app.post('/booking', async(req , res) =>{
+      const booking = req.body;
+      const query = { treatment: booking.treatment, date: booking.date, patient: booking.patient}
+      const exists = await bookingCollection.findOne(query);
+      if(exists) {
+        return res.send({success: false, exists})
+      }
+      const result = await bookingCollection.insertOne(booking);
+      return res.send({success: true, result});
+    });
   }
   finally {
 
