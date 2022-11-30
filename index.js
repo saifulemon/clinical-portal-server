@@ -26,7 +26,7 @@ async function run() {
     });
     
     app.get('/available', async(req , res) =>{
-      const date = req.query.date || 'May 11, 2011';
+      const date = req.query.date;
       const services = await serviceCollection.find().toArray();
       const query = {date: date};
       const booked = await bookingCollection.find(query).toArray();
@@ -35,9 +35,9 @@ async function run() {
         const serviceBookings = booked.filter(b => b.treatment === service.name);
         const updateBooke = serviceBookings.map(s => s.slot);
         const available = service.slots.filter(s => !updateBooke.includes(s));
-        service.available = available;
+        service.slots = available;
       })
-      res.send(booked);
+      res.send(services);
     })
 
     app.post('/booking', async(req , res) =>{
